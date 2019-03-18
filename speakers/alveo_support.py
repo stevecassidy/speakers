@@ -61,6 +61,36 @@ def get_alveo_data(item_list_url, directory):
     return speakers, basenames
 
 
+def get_data_for_items(items, directory):
+    """Get data for a list of items with audio URLs
+
+    Return a list of speaker identifiers and a list of file
+    basenames that have been stored in DATA_DIR
+
+    config: DATA_DIR, ALVEO_API_URL, ALVEO_API_KEY
+    """
+
+    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"))
+
+    data_dir = os.path.join(config("DATA_DIR"), directory)
+
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    basenames = []
+    for item in items:
+        doc = pyalveo.Document({'alveo:url': item['audio']}, client)
+        dir = os.path.join(data_dir, item['spkrid'])
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        doc.download_content(dir_path=dir)
+        basenames.append(os.path.splitext(os.path.basename(doc.get_filename()))[0])
+
+    logging.info("Downloaded %d files" % len(basenames))
+
+    return basenames
+
+
 def speakers_component(speakers, component):
     """Generate a list of items for a given set of speakers
     containing all items from the given component (eg. digits, sentences)
