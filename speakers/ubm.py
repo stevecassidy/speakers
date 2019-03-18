@@ -1,7 +1,7 @@
 """
     Code to train a Universal Background Model
 """
-
+import logging
 import os
 import sidekit
 from .config import config
@@ -23,23 +23,21 @@ def train_ubm(server, basenames):
     config: NUMBER_OF_MIXTURES, THREADS, SAVE_PARTIAL, MODEL_DIR
     """
 
+    logging.info("Starting UBM Training")
     ubm = sidekit.Mixture()
-
-    #iterations = (1, 2, 2, 4, 4, 4, 4, 8, 8, 8, 8, 8, 8)
-    iterations = (1, 2, 2, 2)
 
     ubm.EM_split(features_server=server,
                  feature_list=basenames,
                  distrib_nb=int(config("NUMBER_OF_MIXTURES")),
-                 iterations=iterations,
                  num_thread=int(config("THREADS")),
-                 save_partial=config("SAVE_PARTIAL"),
+                 save_partial=config("SAVE_PARTIAL") == "True",
                  ceil_cov=10,
                  floor_cov=1e-2
                  )
 
     # write out a copy of the trained UBM
     ubm.write(ubmfile())
+    logging.info("UBM model written to %s" % ubmfile())
 
     return ubm
 

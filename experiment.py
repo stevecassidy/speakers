@@ -1,7 +1,18 @@
+
+import logging
+
+logging.basicConfig(filename='example.log',level=logging.DEBUG)
+
 from speakers.config import configinit
 from speakers.alveo_support import get_alveo_data, create_idmap
 from speakers.features import make_feature_server
-from speakers. train_ubm import load_or_train_ubm, sufficient_stats, adapt_models
+from speakers. ubm import load_or_train_ubm, sufficient_stats, adapt_models
+
+
+logging.debug('This message should go to the log file')
+logging.info('So should this')
+logging.warning('And this, too')
+
 
 configinit("config.ini")
 

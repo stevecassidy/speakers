@@ -36,6 +36,12 @@ def config(key, default=''):
         return default
 
 
+def items():
+    """Get a list of configuration names"""
+
+    return _config.items(CONFIG_KEY)
+
+
 def print_config():
     """Print out the current configuration"""
     global _config
