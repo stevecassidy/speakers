@@ -38,7 +38,7 @@ def train_ubm():
                  feature_list=basenames,
                  distrib_nb=int(config("NUMBER_OF_MIXTURES")),
                  num_thread=int(config("THREADS")),
-                 save_partial=config("SAVE_PARTIAL") == "True",
+                 save_partial=config('MODEL_DIR')+'/ubm',
                  ceil_cov=10,
                  floor_cov=1e-2
                  )
