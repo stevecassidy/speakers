@@ -25,26 +25,45 @@ def create_idmap(speakers, basenames):
     return idmap
 
 
-def extract_features(basenames, data_dir, feat_dir):
+def find_basenames(datadir, suffix):
+    """Return a list of file basenames ending in suffix in the given directory
+    and below (recursive)"""
+
+    basenames = []
+    audio_filenames = []
+    for dirpath, dirnames, filenames in os.walk(datadir):
+        for fn in filenames:
+            if fn.endswith(suffix):
+                basename, ext = os.path.splitext(fn)
+                audio_filenames.append(os.path.join(dirpath, fn))
+                basenames.append(basename)
+
+    return basenames, audio_filenames
+
+
+def extract_features(dirname):
     """
-    Extract features from a set of data in data_dir (*.wav)
-    and write features into feat_dir for future use
+    Extract features from a set of data in DATA_DIR/dirname (*.wav)
+    and write features into FEAT_DIR/dirname for future use
     """
 
     # TODO: more of these settings should be derived from the config file
 
-    dd = os.path.join(config('DATA_DIR'), data_dir)
-    fd = os.path.join(config('FEAT_DIR'), feat_dir)
+    dd = os.path.join(config('DATA_DIR'), dirname)
+    fd = os.path.join(config('FEAT_DIR'), dirname)
+
+    if not os.path.exists(fd):
+        os.makedirs(fd)
 
     # clear the feature directory of old files
     if len(os.listdir(fd)) > 0:
         logging.info("Feature files already present...skipping")
         return
 
-    logging.info("Extracting features for data in %s to %s" % (data_dir, feat_dir))
+    logging.info("Extracting features for data in %s to %s" % (dd, fd))
 
     # make a feature server to compute features over our audio files
-    extractor = sidekit.FeaturesExtractor(audio_filename_structure=dd+'/{}.wav',
+    extractor = sidekit.FeaturesExtractor(audio_filename_structure=None,
                                           feature_filename_structure=fd+"/{}.h5",
                                           sampling_frequency=None,
                                           lower_frequency=200,
@@ -60,19 +79,23 @@ def extract_features(basenames, data_dir, feat_dir):
                                           save_param=["vad", "energy", "cep", "fb"],
                                           keep_all_features=False)
 
+    basenames, audio_filenames = find_basenames(dd, 'wav')
     channel_list = numpy.zeros_like(basenames, dtype = int)  # list of zeros one per basename
     # save features for all input files
-    extractor.save_list(show_list=basenames, channel_list=channel_list, num_thread=int(config('THREADS')))
+    extractor.save_list(show_list=basenames,
+                        audio_file_list=audio_filenames,
+                        channel_list=channel_list,
+                        num_thread=int(config('THREADS')))
 
     logging.info("Features extracted")
 
 
-def make_feature_server(feat_dir):
+def make_feature_server(dirname):
     """Return a Sidekit FeatureServer instance for this
     experiement
     """
 
-    fd = os.path.join(config('FEAT_DIR'), feat_dir)
+    fd = os.path.join(config('FEAT_DIR'), dirname)
 
     server = sidekit.FeaturesServer(features_extractor=None,
                                     feature_filename_structure=fd+"/{}.h5",
@@ -94,3 +117,4 @@ def make_feature_server(feat_dir):
                                     keep_all_features=True)
 
     return server
+

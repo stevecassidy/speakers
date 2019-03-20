@@ -5,6 +5,7 @@ import logging
 import os
 import sidekit
 from .config import config
+from .features import make_feature_server, find_basenames
 
 
 def ubmfile():
@@ -17,13 +18,20 @@ def ubmfile():
     return os.path.join(config("MODEL_DIR"), ubmfile)
 
 
-def train_ubm(server, basenames):
+def train_ubm():
     """Train a UBM given the configuration settings
 
     config: NUMBER_OF_MIXTURES, THREADS, SAVE_PARTIAL, MODEL_DIR
     """
 
     logging.info("Starting UBM Training")
+
+    dd = os.path.join(config('DATA_DIR'), config('UBM_DATA_DIR'))
+
+    server = make_feature_server(config('UBM_DATA_DIR'))
+
+    basenames, audio_filenames = find_basenames(dd, 'wav')
+
     ubm = sidekit.Mixture()
 
     ubm.EM_split(features_server=server,

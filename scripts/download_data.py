@@ -1,14 +1,13 @@
 import speakers.log
 from speakers.alveo_support import get_data_for_items
-from speakers.config import configinit
+from speakers.config import configinit, config
 import json
-import sys
 
 configinit('config.ini')
 
 if __name__ == '__main__':
 
-    with open(sys.argv[1]) as fd:
+    with open(config('UBM_UTTERANCE_JSON')) as fd:
         items = json.load(fd)
 
-    get_data_for_items(items, sys.argv[2])
+    get_data_for_items(items, config('UBM_DATA_DIR'))
