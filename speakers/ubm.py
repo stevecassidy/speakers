@@ -26,11 +26,11 @@ def train_ubm():
 
     logging.info("Starting UBM Training")
 
-    dd = os.path.join(config('DATA_DIR'), config('UBM_DATA_DIR'))
+    fd = os.path.join(config('FEAT_DIR'), config('UBM_DATA_DIR'))
 
     server = make_feature_server(config('UBM_DATA_DIR'))
 
-    basenames, audio_filenames = find_basenames(dd, 'wav')
+    basenames, feature_filenames = find_basenames(fd, 'h5')
 
     ubm = sidekit.Mixture()
 
