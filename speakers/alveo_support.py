@@ -7,6 +7,7 @@ import pyalveo
 import logging
 from .config import config
 import csv
+from random import sample
 
 
 def read_speaker_csv(csvfile):
@@ -89,9 +90,13 @@ def get_data_for_items(items, directory):
     return basenames
 
 
-def speakers_component(speakers, component):
+def speakers_component(speakers, component, count=None, random=False):
     """Generate a list of items for a given set of speakers
     containing all items from the given component (eg. digits, sentences)
+    If n is not None it is an integer and only n items per speaker are retrieved.
+    If random=True, n items are selected at random, otherwise the first n items
+    per speaker are selected.
+
     Return a list of item URLs"""
 
     client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"))
@@ -120,6 +125,7 @@ SELECT ?spkrid ?item ?prompt ?session ?audio WHERE {
 
     items = []
     for spkr in speakers:
+        speaker_items = []
         qq = query % (spkr, component)
 
         try:
@@ -135,11 +141,19 @@ SELECT ?spkrid ?item ?prompt ?session ?audio WHERE {
                     'session': b['session']['value'],
                     'audio': b['audio']['value']
                 }
-                items.append(row)
+                speaker_items.append(row)
         except:
             print("Problem with query for ", spkr)
             with open('problem-speakers.txt', 'a') as fd:
                 fd.write(spkr)
                 fd.write('\n')
+
+        if count:
+            if random:
+                speaker_items = sample(speaker_items, count)
+            else:
+                speaker_items = speaker_items[:count]
+        items += speaker_items
+
 
     return items
