@@ -76,7 +76,7 @@ def get_data_for_items(items, directory):
         os.makedirs(data_dir)
 
     basenames = []
-    for item in items[:3]:
+    for item in items:
         doc = pyalveo.Document({'alveo:url': item['audio']}, client)
         dir = os.path.join(data_dir, item['spkrid'])
         if not os.path.exists(dir):
