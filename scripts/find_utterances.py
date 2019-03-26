@@ -2,18 +2,31 @@ import speakers.log
 from speakers.alveo_support import speakers_component
 from speakers.config import configinit, config
 import json
-import sys
+import os
 
 configinit('config.ini')
 
-if __name__=='__main__':
 
-    with open(config('UBM_SPEAKER_LIST')) as fd:
+def find_utts(speaker_file, component, output_json):
+
+    with open(speaker_file) as fd:
         speakers = [x.strip() for x in fd.readlines()]
 
-    items = speakers_component(speakers, config('UBM_AUSTALK_COMPONENT'))
+    items = speakers_component(speakers, component)
 
-    with open(config('UBM_UTTERANCE_JSON'), 'w') as fd:
+    with open(os.path.join('data', output_json), 'w') as fd:
         json.dump(items, fd, indent=4)
 
-    print("Wrote %d items to %s" % (len(items), config('UBM_UTTERANCE_JSON')))
+    return items
+
+
+if __name__ == '__main__':
+
+    component = config('UBM_AUSTALK_COMPONENT')
+    items = find_utts('ubm-speakers.txt', component, 'ubm-'+component+'.json')
+    print("Wrote %d items to %s" % (len(items), 'ubm-'+component+'.json'))
+
+    component = config('DEV_AUSTALK_COMPONENT')
+    for spkrset in ['dev', 'test', 'eval']:
+        items = find_utts(spkrset + '-speakers.txt', component, spkrset+'-'+component+'.json')
+        print("Wrote %d items to %s" % (len(items), spkrset+'-'+component+'.json'))

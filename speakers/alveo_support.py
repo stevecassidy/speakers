@@ -4,8 +4,6 @@
 """
 import os
 import pyalveo
-import sidekit
-import numpy
 import logging
 from .config import config
 import csv
@@ -78,7 +76,7 @@ def get_data_for_items(items, directory):
         os.makedirs(data_dir)
 
     basenames = []
-    for item in items:
+    for item in items[:3]:
         doc = pyalveo.Document({'alveo:url': item['audio']}, client)
         dir = os.path.join(data_dir, item['spkrid'])
         if not os.path.exists(dir):
@@ -105,10 +103,10 @@ PREFIX olac:<http://www.language-archives.org/OLAC/1.1/>
 PREFIX ausnc:<http://ns.ausnc.org.au/schemas/ausnc_md_model/>
 
 SELECT ?spkrid ?item ?prompt ?session ?audio WHERE {
-	BIND ('%s' as ?spkrid)
+    BIND ('%s' as ?spkrid)
     ?spkr a foaf:Person .
     ?spkr dcterms:identifier ?spkrid .
-  	?item olac:speaker ?spkr .
+    ?item olac:speaker ?spkr .
     ?item austalk:componentName '%s' .
     ?item austalk:prototype ?prot .
     ?prot austalk:prompt ?prompt .
@@ -117,21 +115,31 @@ SELECT ?spkrid ?item ?prompt ?session ?audio WHERE {
     ?audio austalk:channel 'ch6-speaker16' .
 } 
     """
+    with open('problem-speakers.txt', 'w') as fd:
+        fd.write('speakers_component for ' + component)
+
     items = []
     for spkr in speakers:
         qq = query % (spkr, component)
 
-        result = client.sparql_query('austalk', qq)
-        bindings = result['results']['bindings']
+        try:
+            result = client.sparql_query('austalk', qq)
+            bindings = result['results']['bindings']
 
-        print("speaker", spkr, " has ", len(bindings), "matches")
-        for b in bindings:
-            row = {
-                'item': b['item']['value'],
-                'spkrid': b['spkrid']['value'],
-                'prompt': b['prompt']['value'],
-                'session': b['session']['value'],
-                'audio': b['audio']['value']
-            }
-            items.append(row)
+            print('%d.' % len(bindings), end='', flush=True)
+            for b in bindings:
+                row = {
+                    'item': b['item']['value'],
+                    'spkrid': b['spkrid']['value'],
+                    'prompt': b['prompt']['value'],
+                    'session': b['session']['value'],
+                    'audio': b['audio']['value']
+                }
+                items.append(row)
+        except:
+            print("Problem with query for ", spkr)
+            with open('problem-speakers.txt', 'a') as fd:
+                fd.write(spkr)
+                fd.write('\n')
+
     return items

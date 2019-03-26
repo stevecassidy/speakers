@@ -50,27 +50,27 @@ def train_ubm():
     return ubm
 
 
-def load_or_train_ubm(server, basenames):
-    """Load a UBM from disk if present or train one
-    if not"""
+def load_ubm():
+    """Load a UBM from disk and return"""
 
     uf = ubmfile()
     if os.path.exists(uf):
         ubm = sidekit.Mixture()
         ubm.read(uf)
+        return ubm
     else:
-        ubm = train_ubm(server, basenames)
-
-    return ubm
+        return None
 
 
-def sufficient_stats(idmap, server, ubm):
+def sufficient_stats(idmap, ubm):
     """
     Generate the sufficient statistics for speaker data given a UBM
 
     config: NUMBER_OF_MIXTURES, THREADS, FEATURE_SIZE
     :return:
     """
+    server = make_feature_server(config('UBM_DATA_DIR'))
+
     sufstat = sidekit.StatServer(idmap,
                                  distrib_nb=int(config('NUMBER_OF_MIXTURES')),
                                  feature_size=int(config('FEATURE_SIZE')))
@@ -102,3 +102,5 @@ def adapt_models(ubm, sufstat):
     speaker_models.write(os.path.join(config('MODEL_DIR'), filename))
 
     return speaker_models
+
+

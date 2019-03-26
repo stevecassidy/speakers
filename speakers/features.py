@@ -10,17 +10,28 @@ import logging
 from .config import config
 
 
-def create_idmap(speakers, basenames):
-    """Given a list of speakers and file basenames, return a Sidekit IdMap
+def create_idmap(datadir, suffix):
+    """Generate a map between basenames and speakers from
+     a directory of audio data containing speaker directories
+     return a Sidekit IdMap
     instance"""
-    # make an idmap between speakers and filenames
+
+    basenames = []
+    speakers = []
+    for dirpath, dirnames, filenames in os.walk(datadir):
+        speaker = os.path.split(dirpath)[1]
+        for fn in filenames:
+            if fn.endswith(suffix):
+                basename, ext = os.path.splitext(fn)
+                speakers.append(speaker)
+                basenames.append(basename)
+
+    # make an idmap between speakers and basenames
     idmap = sidekit.IdMap()
     idmap.leftids = numpy.array(speakers)
     idmap.rightids = numpy.array(basenames)
     idmap.start = numpy.empty((len(speakers)), dtype="|O") # no start
     idmap.stop = numpy.empty(len(speakers), dtype="|O")    # no end
-
-    idmap.validate()
 
     return idmap
 
@@ -118,3 +129,6 @@ def make_feature_server(dirname):
 
     return server
 
+
+if __name__ == '__main__':
+    create_idmap('data/ubm', 'wav')

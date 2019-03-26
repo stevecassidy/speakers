@@ -22,22 +22,34 @@ Copy config.ini.dist to config.ini and modify the settings in that file.
 ## Scripts
 
 Starting with speakers.csv downloaded from austalk-query.apps.alveo.edu.au we first partition
-speakers into UBM and remaining speakers.
+speakers into different sets: dev, eval, test and ubm. The first three contain 50 male and 50 female
+speakers each, the last (ubm) contains all remaining speakers.  The results are written to separate
+text files in the `data` directory.
 
 ```commandline
 python -m scripts.partition_speakers  
 ```
 
-Next download the data from Alveo for the UBM speakers
+Then find the target utterances for each speaker, these are defined by `UBM_AUSTALK_COMPONENT` and
+`DEV_AUSTALK_COMPONENT` in the config file.  All items for these components will be found and stored
+in JSON files.  The script writes one JSON file for each set into the `data` directory, e.g. `data/dev-sentences.json`.
 
 ```commandline
-python -m scripts.download_data
+python -m scripts.find_utterances
+``` 
+
+Next download the data from Alveo for the target speakers, this script takes one or more JSON filenames
+as input and writes data to a corresponding directory in `data/`, eg. `data/dev-sentences.json` writes to `data/dev-sentences`
+
+```commandline
+python -m scripts.download_data json [json ...] 
 ```
 
-Then compute features for the audio data
+Then compute features for the audio data. This script writes one feature file (`.h5`) for each audio file.  Arguments
+are the names of the sub-directories containing the data inside the `data/` directory, eg. `dev-sentences`.
 
 ```commandline
-python -m scripts.extract_features
+python -m scripts.extract_features dirname [dirname ...]
 ```
 
 Now train the UBM on this data

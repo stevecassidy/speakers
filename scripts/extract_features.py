@@ -1,11 +1,11 @@
 import speakers.log
+import argparse
 from speakers.features import extract_features
-from speakers.config import configinit, config
-import json
-import sys
 
-configinit('config.ini')
+parser = argparse.ArgumentParser(description='Compute features for audio files')
+parser.add_argument('dir', type=str, nargs='+', help='subdirectory of data containing audio files')
 
-if __name__ == '__main__':
+args = parser.parse_args()
 
-    extract_features(config('UBM_DATA_DIR'))
+for dir in args.dir:
+    extract_features(dir)
