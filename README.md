@@ -63,39 +63,50 @@ as input and writes data to a corresponding directory in `data/`, eg. `data/dev-
 python -m scripts.download_data json [json ...] 
 ```
 
-Script to define enrol/test subsets for a given directory.  Outputs a json file with speaker labels and basename pairs 
-ready to be turned into a SideKit IdMap later.  
+Script to define enrol/test subsets for a given directory.  Outputs two csv files with speaker labels and basename pairs 
+ready to be used in training and testing later.  Files are written to the data directory with names `enrol.csv` and
+`test.csv`.
 
 ```commandline
 python -m scripts.split_enrollment json
 ```
 
-
-
 ### Feature Extraction
-
-
-
-
 
 
 Then compute features for the audio data. This script writes one feature file (`.h5`) for each audio file.  Arguments
 are the names of the sub-directories containing the data inside the `data/` directory, eg. `dev-sentences`.
 
 ```commandline
-python -m scripts.extract_features dirname [dirname ...]
+python -m scripts.extract_features ubm-sentences dev-sentences
 ```
 
-Now train the UBM on this data
+
+### Model training
+
+
+Now train the UBM on the UBM data set:
 
 ```commandline
 python -m scripts.train_ubm
 ```
 
 We can now build speaker models, this will use a different dataset containing the speakers we wish
-to recognise or verify.  Speaker models are derived from an enrollment subset of the data, for example the
-first three recordings for each speaker.   This leaves the remaining recordings for evaluation.  
+to recognise or verify. 
 
 ```commandline
-python -m scripts.train_speaker_models --enrol 3 dev-sentences 
+python -m scripts.train_speaker_models dev-sentence
 ```
+
+### Testing
+
+Finally we can test the models and generate a DET plot:
+
+```commandline
+python -m scripts.train_speaker_models dev-sentences
+```
+
+This will output a score (EER and minDCF) and generate a PDF plot in the current directory.
+
+
+
