@@ -19,6 +19,7 @@ def report(name, slist):
     print("Average Female age:", sum(ages_f)/len(ages_f))
     print("Overall average age:", sum(ages_all)/len(ages_all))
 
+
 if __name__=='__main__':
 
     import sys

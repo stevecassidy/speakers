@@ -4,8 +4,10 @@
 import logging
 import os
 import sidekit
+import numpy
+import matplotlib.pyplot as plt
 from .config import config
-from .features import make_feature_server, find_basenames
+from .features import make_feature_server, find_basenames, create_idmap, create_key, create_ndx
 
 
 def ubmfile():
@@ -62,14 +64,18 @@ def load_ubm():
         return None
 
 
-def sufficient_stats(idmap, ubm):
+def sufficient_stats(ubm, idmap, datadir):
     """
     Generate the sufficient statistics for speaker data given a UBM
+
+    ubm - a trained UBM
+    idmap - an idmap for the enrolment data
+    datadir - name of subdirectory of FEAT_DIR containing training data
 
     config: NUMBER_OF_MIXTURES, THREADS, FEATURE_SIZE
     :return:
     """
-    server = make_feature_server(config('UBM_DATA_DIR'))
+    server = make_feature_server(datadir)
 
     sufstat = sidekit.StatServer(idmap,
                                  distrib_nb=int(config('NUMBER_OF_MIXTURES')),
@@ -104,3 +110,43 @@ def adapt_models(ubm, sufstat):
     return speaker_models
 
 
+def evaluate_models(ubm, speaker_models, datadir):
+    """Evaluate speaker models on test data from
+    datadir"""
+
+    server = make_feature_server(datadir)
+
+    test_csv = os.path.join("data", datadir, 'test.csv')
+    test_ndx = create_ndx(test_csv)
+
+    scores = sidekit.gmm_scoring(ubm,
+                                 speaker_models,
+                                 test_ndx,
+                                 server,
+                                 num_thread=int(config("THREADS")))
+
+    scores.write("scores.h5")
+
+    return scores
+
+def plot_results(datadir, scores):
+    """Generate a plot of results"""
+
+    test_csv = os.path.join("data", datadir, 'test.csv')
+
+    key = create_key(test_csv)
+    plt.rcParams["figure.figsize"] = (10,10)
+    prior = sidekit.logit_effective_prior(0.01, 10, 1)
+
+    dp = sidekit.DetPlot(window_style='sre10', plot_title='GMM-UBM')
+    dp.set_system_from_scores(scores, key, sys_name='GMM-UBM')
+    dp.create_figure()
+    dp.plot_rocch_det(0)
+    dp.plot_DR30_both(idx=0)
+    dp.plot_mindcf_point(prior, idx=0)
+
+    plt.savefig(config("EXPERIMENT_NAME") + "-results.pdf")
+
+    prior = sidekit.logit_effective_prior(0.001, 1, 1)
+    minDCF, Pmiss, Pfa, prbep, eer = sidekit.bosaris.detplot.fast_minDCF(dp.__tar__[0], dp.__non__[0], prior, normalize=True)
+    print("UBM-GMM, minDCF = {}, eer = {}".format(minDCF, eer))

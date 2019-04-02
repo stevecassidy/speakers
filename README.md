@@ -19,7 +19,25 @@ using a virtualenv then this is <venv>/lib/python3.6/site-packages/sidekit/featu
 
 Copy config.ini.dist to config.ini and modify the settings in that file.
 
-## Scripts
+## Data Preparation and Download
+
+This section covers the creation of the training and testing datasets from the Austalk collection
+stored on Alveo and so it is specific to this collection.  Later sections should work on any collection
+using a similar directory layout. 
+
+To develop a speaker id/verification system we need some different data collections:
+
+* a large collection of speakers to use for generating a Universal Background Model (UBM), this should 
+be phonetically diverse and include a range of speakers
+* For development we need two data sets. One for repeated experimentation while we develop the 
+models and tune parameters (dev), one to test a tuned model to see how it performs
+on unseen data (test) and a final one that is kept back until all tuning has been done for a
+final evaluation (eval).   Each of these sets contain different speakers sampled from the overall
+speaker set.
+* Within each set we have for each speaker a set of enrollment data and some test data.  Enrollment
+data is used to create models for each speaker. Test data is used to evaluate the speaker id or 
+verification performance of the model.  
+
 
 Starting with speakers.csv downloaded from austalk-query.apps.alveo.edu.au we first partition
 speakers into different sets: dev, eval, test and ubm. The first three contain 50 male and 50 female
@@ -45,6 +63,22 @@ as input and writes data to a corresponding directory in `data/`, eg. `data/dev-
 python -m scripts.download_data json [json ...] 
 ```
 
+Script to define enrol/test subsets for a given directory.  Outputs a json file with speaker labels and basename pairs 
+ready to be turned into a SideKit IdMap later.  
+
+```commandline
+python -m scripts.split_enrollment json
+```
+
+
+
+### Feature Extraction
+
+
+
+
+
+
 Then compute features for the audio data. This script writes one feature file (`.h5`) for each audio file.  Arguments
 are the names of the sub-directories containing the data inside the `data/` directory, eg. `dev-sentences`.
 
@@ -58,3 +92,10 @@ Now train the UBM on this data
 python -m scripts.train_ubm
 ```
 
+We can now build speaker models, this will use a different dataset containing the speakers we wish
+to recognise or verify.  Speaker models are derived from an enrollment subset of the data, for example the
+first three recordings for each speaker.   This leaves the remaining recordings for evaluation.  
+
+```commandline
+python -m scripts.train_speaker_models --enrol 3 dev-sentences 
+```

@@ -93,7 +93,9 @@ def get_data_for_items(items, directory):
 def speakers_component(speakers, component, count=None, random=False):
     """Generate a list of items for a given set of speakers
     containing all items from the given component (eg. digits, sentences)
+
     If n is not None it is an integer and only n items per speaker are retrieved.
+
     If random=True, n items are selected at random, otherwise the first n items
     per speaker are selected.
 

@@ -10,23 +10,34 @@ import logging
 from .config import config
 
 
-def create_idmap(datadir, suffix):
-    """Generate a map between basenames and speakers from
-     a directory of audio data containing speaker directories
-     return a Sidekit IdMap
-    instance"""
 
-    basenames = []
+def read_speaker_csv(filename):
+    """Read data from a csv file with speaker, basename pairs
+
+    return two lists: speakers, basenames
+    """
+
     speakers = []
-    for dirpath, dirnames, filenames in os.walk(datadir):
-        speaker = os.path.split(dirpath)[1]
-        for fn in filenames:
-            if fn.endswith(suffix):
-                basename, ext = os.path.splitext(fn)
-                speakers.append(speaker)
-                basenames.append(basename)
+    basenames = []
+    with open(filename) as fd:
+        for line in fd:
+            line = line.strip()
+            speaker, basename = line.split(',')
+            speakers.append(speaker)
+            basenames.append(basename)
 
-    # make an idmap between speakers and basenames
+    return speakers, basenames
+
+
+def create_idmap(filename):
+    """Generate a map between basenames and speakers from
+    a csv file
+
+    return a Sidekit IdMap instance
+     """
+
+    speakers, basenames = read_speaker_csv(filename)
+
     idmap = sidekit.IdMap()
     idmap.leftids = numpy.array(speakers)
     idmap.rightids = numpy.array(basenames)
@@ -34,6 +45,55 @@ def create_idmap(datadir, suffix):
     idmap.stop = numpy.empty(len(speakers), dtype="|O")    # no end
 
     return idmap
+
+
+def create_key(csvfile):
+    """Define target and non target trials"""
+
+    # define the target and non target (imposter) trials
+    # for each speaker we have a vector of booleans that say whether
+    # each segment is a target or not
+
+    speakers, basenames = read_speaker_csv(csvfile)
+
+    key = sidekit.Key()
+    # models and segments are the same as defined in the training data
+    unique_speakers = list(set(speakers))
+    key.modelset = numpy.array(unique_speakers)
+    key.segset = numpy.array(basenames)
+
+    key.tar = numpy.zeros((key.modelset.size, key.segset.size), dtype='bool')
+
+    key.tar[0,0] = False
+    key.non = numpy.zeros((key.modelset.size, key.segset.size), dtype='bool')
+    key.non[0,0] = True
+
+    trows = []
+    nrows = []
+    for sp in key.modelset:
+        tar = numpy.array(speakers) == sp
+        non = numpy.array(speakers) != sp
+        trows.append(tar)
+        nrows.append(non)
+
+    key.tar = numpy.array(trows)
+    key.non = numpy.array(nrows)
+
+    return key
+
+
+def create_ndx(filename):
+
+    # the ndx object stores the testing trials to be evaluated and the models to be used
+    speakers, basenames = read_speaker_csv(filename)
+
+    unique_speakers = list(set(speakers))
+    ndx = sidekit.Ndx()
+    ndx.modelset = numpy.array(unique_speakers)  # list of distinct models
+    ndx.segset = numpy.array(basenames)        # list of trial segments to be tested
+    ndx.trialmask = numpy.ones((len(unique_speakers), len(basenames)), dtype='bool')
+
+    return ndx
 
 
 def find_basenames(datadir, suffix):
@@ -131,4 +191,10 @@ def make_feature_server(dirname):
 
 
 if __name__ == '__main__':
-    create_idmap('data/ubm', 'wav')
+    enrol, test = split_enrolment_data('data/ubm', 'wav', 5)
+
+    for pair in enrol:
+        print(pair)
+    print('----------------------------')
+    for pair in test:
+        print(pair)
