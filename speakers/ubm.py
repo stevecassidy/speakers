@@ -4,7 +4,6 @@
 import logging
 import os
 import sidekit
-import numpy
 import matplotlib.pyplot as plt
 from .config import config
 from .features import make_feature_server, find_basenames, create_idmap, create_key, create_ndx
@@ -16,7 +15,7 @@ def ubmfile():
     config: MODEL_DIR, NUMBER_OF_MIXTURES
     """
 
-    ubmfile = 'ubm_%s.h5' % config("NUMBER_OF_MIXTURES")
+    ubmfile = 'ubm_{}_{}.h5'.format(config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
     return os.path.join(config("MODEL_DIR"), ubmfile)
 
 
@@ -40,7 +39,6 @@ def train_ubm():
                  feature_list=basenames,
                  distrib_nb=int(config("NUMBER_OF_MIXTURES")),
                  num_thread=int(config("THREADS")),
-                 save_partial=config('MODEL_DIR')+'/ubm',
                  ceil_cov=10,
                  floor_cov=1e-2
                  )
@@ -75,19 +73,24 @@ def sufficient_stats(ubm, idmap, datadir):
     config: NUMBER_OF_MIXTURES, THREADS, FEATURE_SIZE
     :return:
     """
-    server = make_feature_server(datadir)
 
-    sufstat = sidekit.StatServer(idmap,
-                                 distrib_nb=int(config('NUMBER_OF_MIXTURES')),
-                                 feature_size=int(config('FEATURE_SIZE')))
-    sufstat.accumulate_stat(ubm=ubm,
-                            feature_server=server,
-                            seg_indices=range(sufstat.segset.shape[0]),
-                            num_thread=int(config('THREADS')))
+    filename = os.path.join(config('MODEL_DIR'),
+                            "sufstat_%s_%s.h5" % (config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE")))
 
-    filename = "sufstat_%s_%s.h5" % (config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
+    if os.path.exists(filename):
+        print("Reading sufficient statistics from file", filename)
+        sufstat = sidekit.StatServer(filename)
+    else:
+        server = make_feature_server(datadir)
 
-    sufstat.write(os.path.join(config('MODEL_DIR'), filename))
+        sufstat = sidekit.StatServer(idmap,
+                                     distrib_nb=int(config('NUMBER_OF_MIXTURES')),
+                                     feature_size=int(config('FEATURE_SIZE')))
+        sufstat.accumulate_stat(ubm=ubm,
+                                feature_server=server,
+                                seg_indices=range(sufstat.segset.shape[0]),
+                                num_thread=int(config('THREADS')))
+        sufstat.write(filename)
 
     return sufstat
 
@@ -104,7 +107,6 @@ def adapt_models(ubm, sufstat):
     speaker_models = sufstat.adapt_mean_map_multisession(ubm, regulation_factor)
 
     filename = "speakers_%s_%s.h5" % (config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
-
     speaker_models.write(os.path.join(config('MODEL_DIR'), filename))
 
     return speaker_models
@@ -128,6 +130,7 @@ def evaluate_models(ubm, speaker_models, datadir):
     scores.write("scores.h5")
 
     return scores
+
 
 def plot_results(datadir, scores):
     """Generate a plot of results"""

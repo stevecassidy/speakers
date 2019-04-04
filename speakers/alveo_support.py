@@ -52,9 +52,19 @@ def get_alveo_data(item_list_url, directory):
         docs = item.get_documents()
         for doc in docs:
             if doc.get_filename().endswith("speaker16.wav"):
-                path = doc.download_content(dir_path=data_dir)
-                filepaths.append(path)
-                basenames.append(os.path.splitext(os.path.basename(doc.get_filename()))[0])
+                try:
+                    path = os.path.join(data_dir, doc.get_filename())
+                    if not os.path.exists(path):
+                        print(path)
+                        path = doc.download_content(dir_path=data_dir)
+                        print(".", flush=True, end='')
+                    else:
+                        print("|", flush=True, end='')
+                    filepaths.append(path)
+                    basenames.append(os.path.splitext(os.path.basename(doc.get_filename()))[0])
+                except pyalveo.pyalveo.APIError:
+                    print("^", flush=True, end='')
+
     logging.info("Downloaded %d files" % len(filepaths))
 
     return speakers, basenames
@@ -82,8 +92,18 @@ def get_data_for_items(items, directory):
         dir = os.path.join(data_dir, item['spkrid'])
         if not os.path.exists(dir):
             os.makedirs(dir)
-        doc.download_content(dir_path=dir)
-        basenames.append(os.path.splitext(os.path.basename(doc.get_filename()))[0])
+
+        try:
+            path = os.path.join(dir, doc.get_filename())
+            if not os.path.exists(path):
+                path = doc.download_content(dir_path=dir)
+                print(".", flush=True, end='')
+            else:
+                print("|", flush=True, end='')
+
+            basenames.append(os.path.splitext(os.path.basename(doc.get_filename()))[0])
+        except:
+            print("^", flush=True, end='')
 
     logging.info("Downloaded %d files" % len(basenames))
 

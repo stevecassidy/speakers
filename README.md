@@ -68,7 +68,7 @@ ready to be used in training and testing later.  Files are written to the data d
 `test.csv`.
 
 ```commandline
-python -m scripts.split_enrollment json
+python -m scripts.split_enrollment dir
 ```
 
 ### Feature Extraction
