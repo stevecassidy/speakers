@@ -5,7 +5,7 @@ import logging
 import os
 import sidekit
 import matplotlib.pyplot as plt
-from .config import config
+from .config import config, config_int, config_bool, config_float
 from .features import make_feature_server, find_basenames, create_idmap, create_key, create_ndx
 
 
