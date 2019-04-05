@@ -75,7 +75,7 @@ def sufficient_stats(ubm, idmap, datadir):
     """
 
     filename = os.path.join(config('MODEL_DIR'),
-                            "sufstat_%s_%s.h5" % (config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE")))
+                            "sufstat_%s_%s.h5" % (config_int("NUMBER_OF_MIXTURES"), ubm.dim()))
 
     if os.path.exists(filename):
         print("Reading sufficient statistics from file", filename)
@@ -84,12 +84,12 @@ def sufficient_stats(ubm, idmap, datadir):
         server = make_feature_server(datadir)
 
         sufstat = sidekit.StatServer(idmap,
-                                     distrib_nb=int(config('NUMBER_OF_MIXTURES')),
-                                     feature_size=int(config('FEATURE_SIZE')))
+                                     distrib_nb=config_int('NUMBER_OF_MIXTURES'),
+                                     feature_size=ubm.dim())
         sufstat.accumulate_stat(ubm=ubm,
                                 feature_server=server,
                                 seg_indices=range(sufstat.segset.shape[0]),
-                                num_thread=int(config('THREADS')))
+                                num_thread=config_int('THREADS'))
         sufstat.write(filename)
 
     return sufstat
@@ -106,7 +106,7 @@ def adapt_models(ubm, sufstat):
     regulation_factor = 3
     speaker_models = sufstat.adapt_mean_map_multisession(ubm, regulation_factor)
 
-    filename = "speakers_%s_%s.h5" % (config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
+    filename = "speakers_%s_%s.h5" % (config_int("NUMBER_OF_MIXTURES"), ubm.dim())
     speaker_models.write(os.path.join(config('MODEL_DIR'), filename))
 
     return speaker_models
@@ -125,7 +125,7 @@ def evaluate_models(ubm, speaker_models, datadir):
                                  speaker_models,
                                  test_ndx,
                                  server,
-                                 num_thread=int(config("THREADS")))
+                                 num_thread=config_int("THREADS"))
 
     scores.write("scores.h5")
 
