@@ -7,7 +7,7 @@ import sidekit
 import os
 import numpy
 import logging
-from .config import config
+from .config import config, config_bool, config_int, config_float
 
 
 
@@ -151,12 +151,13 @@ def extract_features(dirname):
                                           keep_all_features=False)
 
     basenames, audio_filenames = find_basenames(dd, 'wav')
+    print(basenames)
     channel_list = numpy.zeros_like(basenames, dtype = int)  # list of zeros one per basename
     # save features for all input files
     extractor.save_list(show_list=basenames,
                         audio_file_list=audio_filenames,
                         channel_list=channel_list,
-                        num_thread=int(config('THREADS')))
+                        num_thread=config_int('THREADS', 1))
 
     logging.info("Features extracted")
 
@@ -172,19 +173,19 @@ def make_feature_server(dirname):
                                     feature_filename_structure=fd+"/{}.h5",
                                     sources=None,
                                     dataset_list=["energy", "cep", "vad"],
-                                    mask="[0-12]",
-                                    feat_norm="cmvn",
+                                    mask=config("FEATURE_MASK", None),
+                                    feat_norm=config("FEATURE_NORMALISATION", "cmvn"),
                                     global_cmvn=None,
                                     dct_pca=False,
                                     dct_pca_config=None,
                                     sdc=False,
                                     sdc_config=None,
-                                    delta=True,
-                                    double_delta=True,
+                                    delta=config_bool("FEATURES_DELTA", True),
+                                    double_delta=config_bool("FEATURES_DOUBLE_DELTA", True),
                                     delta_filter=None,
                                     context=None,
                                     traps_dct_nb=None,
-                                    rasta=True,
+                                    rasta=config_bool("FEATURES_RASTA", True),
                                     keep_all_features=True)
 
     return server

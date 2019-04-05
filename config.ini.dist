@@ -1,23 +1,39 @@
 [default]
 
+EXPERIMENT_NAME = digits
+
 ALVEO_API_URL = https://app.alveo.edu.au/
 ALVEO_API_KEY = xxxxxxxxx
-
-
-# 500 items
-#ITEM_LIST_URL = "https://app.alveo.edu.au/item_lists/1324
-
-# 16 items
-ITEM_LIST_URL = https://app.alveo.edu.au/item_lists/1325
 
 BASE_DIR = .
 DATA_DIR = %(BASE_DIR)s/data/
 FEAT_DIR = %(BASE_DIR)s/feat/
 MODEL_DIR = %(BASE_DIR)s/models/
 
+SPEAKER_CSV = speakers.csv
+
+UBM_AUSTALK_COMPONENT = sentences
+DEV_AUSTALK_COMPONENT = digits
+
+UBM_AUSTALK_ITEMS_PER_SPEAKER = 10
+UBM_AUSTALK_RANDOM_ITEMS = True
+DEV_AUSTALK_ITEMS_PER_SPEAKER = 10
+DEV_AUSTALK_RANDOM_ITEMS = False
+
+# subdirectory for UBM data and features
+UBM_DATA_DIR = ubm
+
 FEATURE_SIZE = 39
+SAVE_PARTIAL = False
+
+FEATURE_MASK = [0-12]
+FEATURE_NORMALISATION = cmvn
+FEATURES_DELTA = yes
+FEATURES_DOUBLE_DELTA = yes
+FEATURES_RASTA = yes
+
 
 # number of threads to run parallel processes
-THREADS = 1
+THREADS = 4
 # number of mixtures in UBM
-NUMBER_OF_MIXTURES = 8
+NUMBER_OF_MIXTURES = 512

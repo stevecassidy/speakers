@@ -28,12 +28,29 @@ def set_config(key, value):
 def config(key, default=''):
     """Get the value for the given key in the configuration
     returning default if there is no such key"""
-    global _config
 
-    if _config.has_option(CONFIG_KEY, key):
-        return _config.get(CONFIG_KEY, key)
-    else:
-        return default
+    return _config.get(CONFIG_KEY, key, fallback=default)
+
+
+def config_int(key, default=0):
+    """Get the value for the given key in the configuration
+    returning default if there is no such key"""
+
+    return _config.getint(CONFIG_KEY, key, fallback=default)
+
+
+def config_float(key, default=0.0):
+    """Get the value for the given key in the configuration
+    returning default if there is no such key"""
+
+    return _config.getfloat(CONFIG_KEY, key, fallback=default)
+
+
+def config_bool(key, default=False):
+    """Get the value for the given key in the configuration
+    returning default if there is no such key"""
+
+    return _config.getboolean(CONFIG_KEY, key, fallback=default)
 
 
 def items():
