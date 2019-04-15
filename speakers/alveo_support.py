@@ -65,7 +65,7 @@ def get_alveo_data(item_list_url, directory):
     config: DATA_DIR, ALVEO_API_URL, ALVEO_API_KEY
     """
 
-    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"), use_cache=False)
+    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"), use_cache=False, update_cache=False)
     item_list = client.get_item_list(item_list_url)
 
     # For each item we need to get the speaker identifier and the target audio file.
