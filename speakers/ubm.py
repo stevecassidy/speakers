@@ -30,7 +30,7 @@ def train_ubm():
 
     for gender in ['male', 'female']:
 
-        datadir = "ubm"+gender+config("UBM_AUSTALK_COMPONENT")
+        datadir = "ubm-"+gender+"-"+config("UBM_AUSTALK_COMPONENT")
 
         fd = os.path.join(config('FEAT_DIR'), datadir)
 
