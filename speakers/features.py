@@ -7,8 +7,7 @@ import sidekit
 import os
 import numpy
 import logging
-from .config import config, config_bool, config_int, config_float
-
+from .config import config, config_bool, config_int
 
 
 def read_speaker_csv(filename):

@@ -95,7 +95,7 @@ We can now build speaker models, this will use a different dataset containing th
 to recognise or verify. 
 
 ```commandline
-python -m scripts.train_speaker_models dev-sentence
+python -m scripts.train_speaker_models dev-sentences
 ```
 
 ### Testing

@@ -9,51 +9,54 @@ from .config import config, config_int, config_bool, config_float
 from .features import make_feature_server, find_basenames, create_idmap, create_key, create_ndx
 
 
-def ubmfile():
+def ubmfile(gender):
     """Return the name for the ubm file for this configuration
 
     config: MODEL_DIR, NUMBER_OF_MIXTURES
     """
 
-    ubmfile = 'ubm_{}_{}.h5'.format(config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
+    ubmfile = 'ubm_{}_{}_{}.h5'.format(gender, config("NUMBER_OF_MIXTURES"), config("FEATURE_SIZE"))
     return os.path.join(config("MODEL_DIR"), ubmfile)
 
 
 def train_ubm():
     """Train a UBM given the configuration settings
+    Trains separate ubm models for each gender
 
     config: NUMBER_OF_MIXTURES, THREADS, SAVE_PARTIAL, MODEL_DIR
     """
 
     logging.info("Starting UBM Training")
 
-    fd = os.path.join(config('FEAT_DIR'), config('UBM_DATA_DIR'))
+    for gender in ['male', 'female']:
 
-    server = make_feature_server(config('UBM_DATA_DIR'))
+        datadir = "ubm"+gender+config("UBM_AUSTALK_COMPONENT")
 
-    basenames, feature_filenames = find_basenames(fd, 'h5')
+        fd = os.path.join(config('FEAT_DIR'), datadir)
 
-    ubm = sidekit.Mixture()
+        server = make_feature_server(datadir)
 
-    ubm.EM_split(features_server=server,
-                 feature_list=basenames,
-                 distrib_nb=int(config("NUMBER_OF_MIXTURES")),
-                 num_thread=int(config("THREADS")),
-                 ceil_cov=10,
-                 floor_cov=1e-2
-                 )
+        basenames, feature_filenames = find_basenames(fd, 'h5')
 
-    # write out a copy of the trained UBM
-    ubm.write(ubmfile())
-    logging.info("UBM model written to %s" % ubmfile())
+        ubm = sidekit.Mixture()
 
-    return ubm
+        ubm.EM_split(features_server=server,
+                     feature_list=basenames,
+                     distrib_nb=int(config("NUMBER_OF_MIXTURES")),
+                     num_thread=int(config("THREADS")),
+                     ceil_cov=10,
+                     floor_cov=1e-2
+                     )
+
+        # write out a copy of the trained UBM
+        ubm.write(ubmfile(gender))
+        logging.info("UBM model written to %s" % ubmfile())
 
 
-def load_ubm():
+def load_ubm(gender):
     """Load a UBM from disk and return"""
 
-    uf = ubmfile()
+    uf = ubmfile(gender)
     if os.path.exists(uf):
         ubm = sidekit.Mixture()
         ubm.read(uf)
@@ -139,7 +142,7 @@ def plot_results(datadir, scores):
 
     key = create_key(test_csv)
     plt.rcParams["figure.figsize"] = (10,10)
-    prior = sidekit.logit_effective_prior(0.01, 10, 1)
+    prior = sidekit.effective_prior(0.01, 1, 1)
 
     dp = sidekit.DetPlot(window_style='sre10', plot_title='GMM-UBM')
     dp.set_system_from_scores(scores, key, sys_name='GMM-UBM')
@@ -150,6 +153,17 @@ def plot_results(datadir, scores):
 
     plt.savefig(config("EXPERIMENT_NAME") + "-results.pdf")
 
-    prior = sidekit.logit_effective_prior(0.001, 1, 1)
+    prior = sidekit.logit_effective_prior(0.01, 1, 1)
     minDCF, Pmiss, Pfa, prbep, eer = sidekit.bosaris.detplot.fast_minDCF(dp.__tar__[0], dp.__non__[0], prior, normalize=True)
-    print("UBM-GMM, minDCF = {}, eer = {}".format(minDCF, eer))
+    print("UBM-GMM, minDCF = {}, eer = {}, Pmiss = {}, Pfa = {}".format(minDCF, eer, Pmiss, Pfa))
+
+
+if __name__=='__main__':
+
+    from .config import configinit
+    configinit('config.ini')
+
+    import sys
+    scores = sidekit.bosaris.Scores("scores.h5")
+    datadir = sys.argv[1]
+    plot_results(datadir, scores)

@@ -24,6 +24,38 @@ def read_speaker_csv(csvfile):
     return result
 
 
+def speakers_with_data(component='digits'):
+    """Query the Alveo API to find speakers with at least some data for a given
+    component"""
+
+    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"))
+
+    qq = """
+PREFIX dcterms:<http://purl.org/dc/terms/>
+PREFIX foaf:<http://xmlns.com/foaf/0.1/>
+PREFIX austalk:<http://ns.austalk.edu.au/>
+PREFIX olac:<http://www.language-archives.org/OLAC/1.1/>
+PREFIX ausnc:<http://ns.ausnc.org.au/schemas/ausnc_md_model/>
+
+SELECT ?spkrid (count(?item) as ?itemcount) WHERE {
+    ?item olac:speaker ?spkr .
+    ?spkr dcterms:identifier ?spkrid .
+    ?item austalk:componentName '%s' .
+    ?item austalk:session ?session .
+} group by ?spkrid  
+""" % component
+
+    result = client.sparql_query('austalk', qq)
+    bindings = result['results']['bindings']
+
+    speakers = []
+    for b in bindings:
+        if int(b['itemcount']['value']) > 0:
+            speakers.append(b['spkrid']['value'])
+
+    return speakers
+
+
 def get_alveo_data(item_list_url, directory):
     """Using the Alveo API get the audio data for the configured
     item list.
@@ -171,11 +203,20 @@ SELECT ?spkrid ?item ?prompt ?session ?audio WHERE {
                 fd.write('\n')
 
         if count:
-            if random:
+            if random and (count <= len(speaker_items)):
                 speaker_items = sample(speaker_items, count)
             else:
                 speaker_items = speaker_items[:count]
         items += speaker_items
 
-
     return items
+
+
+
+if __name__ == '__main__':
+
+    from .config import configinit
+
+    configinit('config.ini')
+
+    print(speakers_with_data('digits'))
