@@ -111,7 +111,7 @@ def get_data_for_items(items, directory):
     config: DATA_DIR, ALVEO_API_URL, ALVEO_API_KEY
     """
 
-    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"), use_cache=False)
+    client = pyalveo.Client(api_url=config("ALVEO_API_URL"), api_key=config("ALVEO_API_KEY"), use_cache=False, update_cache=False)
 
     data_dir = os.path.join(config("DATA_DIR"), directory)
 
