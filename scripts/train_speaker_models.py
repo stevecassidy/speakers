@@ -12,7 +12,7 @@ parser.add_argument('set', type=str, nargs=1, help='data set name to use, eg. de
 
 args = parser.parse_args()
 
-dataset = args.dir[0]
+dataset = args.set[0]
 
 for gender in ['male', 'female']:
 

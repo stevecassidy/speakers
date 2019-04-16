@@ -132,7 +132,7 @@ def evaluate_models(ubm, speaker_models, datadir):
                                  num_thread=config_int("THREADS"))
 
     filename = "scores_%s_%s_%s.h5" % (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim())
-    scores.write(os.path.join(config("MODEL_DIR"), filename)
+    scores.write(os.path.join(config("MODEL_DIR"), filename))
 
     return scores
 
