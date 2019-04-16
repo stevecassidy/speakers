@@ -11,18 +11,19 @@ args = parser.parse_args()
 
 datadir = args.dir[0]
 
-print("loading...")
-enrol_csv = os.path.join("data", datadir, 'enrol.csv')
-enrol_idmap = create_idmap(enrol_csv)
-print("Loaded enrol filenames from ", enrol_csv)
+for gender in ['male', 'female']:
+    print('loading', gender, 'data')
+    enrol_csv = os.path.join("data", datadir, 'enrol.csv')
+    enrol_idmap = create_idmap(enrol_csv)
+    print("Loaded enrol filenames from ", enrol_csv)
 
-ubm = load_ubm()
-print("UBM Loaded...")
-sufstat = sufficient_stats(ubm, enrol_idmap, datadir)
-print("Written sufficient statistics...")
-speaker_models = adapt_models(ubm, sufstat)
-print("Done building speaker models...")
-scores = evaluate_models(ubm, speaker_models, datadir)
+    ubm = load_ubm(gender)
+    print("UBM Loaded...")
+    sufstat = sufficient_stats(ubm, enrol_idmap, datadir)
+    print("Written sufficient statistics...")
+    speaker_models = adapt_models(ubm, sufstat, datadir)
+    print("Done building speaker models...")
+    scores = evaluate_models(ubm, speaker_models, datadir)
 
-plot_results(datadir, scores)
+    plot_results(datadir, scores)
 

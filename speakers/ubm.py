@@ -50,7 +50,7 @@ def train_ubm():
 
         # write out a copy of the trained UBM
         ubm.write(ubmfile(gender))
-        logging.info("UBM model written to %s" % ubmfile())
+        logging.info("UBM model written to %s" % ubmfile(gender))
 
 
 def load_ubm(gender):
@@ -78,7 +78,8 @@ def sufficient_stats(ubm, idmap, datadir):
     """
 
     filename = os.path.join(config('MODEL_DIR'),
-                            "sufstat_%s_%s.h5" % (config_int("NUMBER_OF_MIXTURES"), ubm.dim()))
+                            "sufstat_%s_%s_%s.h5" %
+                            (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim()))
 
     if os.path.exists(filename):
         print("Reading sufficient statistics from file", filename)
@@ -98,7 +99,7 @@ def sufficient_stats(ubm, idmap, datadir):
     return sufstat
 
 
-def adapt_models(ubm, sufstat):
+def adapt_models(ubm, sufstat, datadir):
     """
     Adapt a UBM to a number of speakers via MAP adaptation
 
@@ -109,7 +110,7 @@ def adapt_models(ubm, sufstat):
     regulation_factor = 3
     speaker_models = sufstat.adapt_mean_map_multisession(ubm, regulation_factor)
 
-    filename = "speakers_%s_%s.h5" % (config_int("NUMBER_OF_MIXTURES"), ubm.dim())
+    filename = "speakers_%s_%s_%s.h5" % (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim())
     speaker_models.write(os.path.join(config('MODEL_DIR'), filename))
 
     return speaker_models
@@ -130,7 +131,8 @@ def evaluate_models(ubm, speaker_models, datadir):
                                  server,
                                  num_thread=config_int("THREADS"))
 
-    scores.write("scores.h5")
+    filename = "scores_%s_%s_%s.h5" % (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim())
+    scores.write(os.path.join(config("MODEL_DIR"), filename)
 
     return scores
 
@@ -151,7 +153,9 @@ def plot_results(datadir, scores):
     dp.plot_DR30_both(idx=0)
     dp.plot_mindcf_point(prior, idx=0)
 
-    plt.savefig(config("EXPERIMENT_NAME") + "-results.pdf")
+    filename = "results_%s_%s_%s.pdf" % (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim())
+
+    plt.savefig(filename)
 
     prior = sidekit.logit_effective_prior(0.01, 1, 1)
     minDCF, Pmiss, Pfa, prbep, eer = sidekit.bosaris.detplot.fast_minDCF(dp.__tar__[0], dp.__non__[0], prior, normalize=True)
