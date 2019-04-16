@@ -153,7 +153,7 @@ def plot_results(datadir, scores):
     dp.plot_DR30_both(idx=0)
     dp.plot_mindcf_point(prior, idx=0)
 
-    filename = "results_%s_%s_%s.pdf" % (datadir, config_int("NUMBER_OF_MIXTURES"), ubm.dim())
+    filename = "results_%s.pdf" % (datadir,)
 
     plt.savefig(filename)
 
