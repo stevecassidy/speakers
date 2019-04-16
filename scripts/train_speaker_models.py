@@ -3,15 +3,21 @@ import argparse
 import os
 from speakers.features import create_idmap
 from speakers.ubm import load_ubm, sufficient_stats, adapt_models, evaluate_models, plot_results
+from speakers.config import configinit, config
+
+configinit('config.ini')
 
 parser = argparse.ArgumentParser(description='Train speaker models on a directory of data')
-parser.add_argument('dir', type=str, nargs=1, help='subdirectory of data containing audio files')
+parser.add_argument('set', type=str, nargs=1, help='data set name to use, eg. dev, test, eval')
 
 args = parser.parse_args()
 
-datadir = args.dir[0]
+dataset = args.dir[0]
 
 for gender in ['male', 'female']:
+
+    datadir = dataset + '-' + gender + '-' + config('DEV_AUSTALK_COMPONENT')
+
     print('loading', gender, 'data')
     enrol_csv = os.path.join("data", datadir, 'enrol.csv')
     enrol_idmap = create_idmap(enrol_csv)
